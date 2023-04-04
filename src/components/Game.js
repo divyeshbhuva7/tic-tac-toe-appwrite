@@ -1,8 +1,8 @@
 import { Text } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
-import { client, collID, databases, dbID } from "../appwriteConfig";
+import { collID, databases, dbID } from "../appwriteConfig";
 
 function Game() {
   const { width, height } = useViewportSize();
@@ -33,6 +33,25 @@ function Game() {
       .catch((err) => console.log(err));
   }, []);
 
+  function postdata() {
+    const updateGameData = databases.updateDocument(dbID, collID, gameID, {
+      val0: boxCount.val0,
+      val1: boxCount.val1,
+      val2: boxCount.val2,
+      val3: boxCount.val3,
+      val4: boxCount.val4,
+      val5: boxCount.val5,
+      val6: boxCount.val6,
+      val7: boxCount.val7,
+      val8: boxCount.val8,
+    });
+
+    console.log("boxCount:", boxCount);
+    updateGameData
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+  }
+
   const boxClick = (idx) => {
     if (
       winner === "" &&
@@ -41,41 +60,44 @@ function Game() {
       switch (idx) {
         case 0:
           setBoxCount({ ...boxCount, val0: user });
+          postdata();
           break;
         case 1:
           setBoxCount({ ...boxCount, val1: user });
+          postdata();
           break;
         case 2:
           setBoxCount({ ...boxCount, val2: user });
+          postdata();
           break;
         case 3:
           setBoxCount({ ...boxCount, val3: user });
+          postdata();
           break;
         case 4:
           setBoxCount({ ...boxCount, val4: user });
+          postdata();
           break;
         case 5:
           setBoxCount({ ...boxCount, val5: user });
+          postdata();
           break;
         case 6:
           setBoxCount({ ...boxCount, val6: user });
+          postdata();
           break;
         case 7:
           setBoxCount({ ...boxCount, val7: user });
+          postdata();
           break;
         case 8:
           setBoxCount({ ...boxCount, val8: user });
+          postdata();
           break;
 
         default:
           break;
       }
-      const updateGameData = databases.updateDocument(dbID, collID, gameID, {
-        ...boxCount,
-      });
-      updateGameData
-        .then((res) => console.log(res))
-        .catch((err) => console.log(err));
     } else {
       return;
     }
@@ -114,17 +136,18 @@ function Game() {
 
   const handleReset = () => {
     setWinner("");
-    setBoxCount([
-      { val: "" },
-      { val: "" },
-      { val: "" },
-      { val: "" },
-      { val: "" },
-      { val: "" },
-      { val: "" },
-      { val: "" },
-      { val: "" },
-    ]);
+    setUser("O");
+    setBoxCount({
+      val0: "",
+      val1: "",
+      val2: "",
+      val3: "",
+      val4: "",
+      val5: "",
+      val6: "",
+      val7: "",
+      val8: "",
+    });
   };
 
   return (
