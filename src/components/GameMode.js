@@ -4,23 +4,40 @@ import { v4 as uuidv4 } from "uuid";
 import tictactoelogo from "../tictactoelogo.png";
 import { Group, Image, Paper, Text } from "@mantine/core";
 import { account, client, collID, databases, dbID } from "../appwriteConfig";
-import { Account } from "appwrite";
 
 function GameMode() {
   const navigate = useNavigate();
   const sharelink = client.config.endpoint;
 
   const [showGameLink, setShowGameLink] = useState(false);
-  const [deactiveOnlineBtn, setDeactiveOnlineBtn] = useState(false);
+  const [showCreateGameBtn, setShowCreateGameBtn] = useState(false);
+  const [userID, setUserID] = useState("");
   const [gameID, setGameID] = useState("");
 
   useEffect(() => {
     setGameID(uuidv4().slice(0, 8));
+
+    const getUser = account.get();
+    getUser
+      .then((res) => {
+        const fullUserId = res.$id;
+        setUserID(fullUserId.slice(0, 8));
+      })
+      .catch((err) => console.log(err));
   }, []);
+
+  const onlineGame = () => {
+    setShowGameLink(true);
+    setShowCreateGameBtn(true);
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(`${sharelink}/game/${userID}/${gameID}`);
+  };
 
   function checkGameID() {
     if (gameID !== "") {
-      navigate(`/game/${gameID}`);
+      navigate(`/game/${userID}/${gameID}`);
     } else {
       return;
     }
@@ -38,50 +55,44 @@ function GameMode() {
       val7: "",
       val8: "",
     });
-
     try {
       checkGameID();
     } catch (err) {
       console.log(err);
     }
-  };
-
-  const onlineGame = () => {
-    setShowGameLink(true);
-    setDeactiveOnlineBtn(true);
-  };
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(`${sharelink}/game/${gameID}`);
+    navigate(`/game/${userID}/${gameID}`);
   };
 
   return (
-    <div className="gamemode-container">
+    <div className="gamemode-container signIn-container">
       <div>
         <Image className="home-bgImg" src={tictactoelogo} />
       </div>
 
-      <Paper className="gamemode-box">
-        <Group className="gamemodes">
-          {!deactiveOnlineBtn ? (
-            <button className="gamemode-btn" onClick={onlineGame}>
-              PLAY ONLINE
-            </button>
+      <Paper className="signIn-box gamemode-box glassEffect">
+        <div>
+          {!showCreateGameBtn ? (
+            <Group position="center">
+              <button className="btn createGame-btn" onClick={onlineGame}>
+                Create Game
+              </button>
+            </Group>
           ) : null}
-        </Group>
 
-        {showGameLink ? (
-          <div className="gamelink">
-            <Text className="link">{`${sharelink}/game/${gameID}`}</Text>
-            <button className="gamemode-btn share" onClick={copyLink}>
-              Copy link
-            </button>
-
-            <button className="gamemode-btn start" onClick={StartGame}>
-              Start Game
-            </button>
-          </div>
-        ) : null}
+          {showGameLink ? (
+            <div className="gamestart-container">
+              <Text className="link">{`${sharelink}/game/${userID}/${gameID}`}</Text>
+              <div className="gamestart-btn">
+                <button className="btn sharelink-btn" onClick={copyLink}>
+                  Copy link
+                </button>
+                <button className="btn startgame-btn" onClick={StartGame}>
+                  Start Game
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </Paper>
     </div>
   );

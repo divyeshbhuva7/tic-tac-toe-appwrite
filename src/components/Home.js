@@ -10,7 +10,7 @@ function Home() {
       <div>
         <Image className="home-bgImg" src={tictactoelogo} />
       </div>
-      <button className="play-btn" onClick={() => navigate("/gamemode")}>
+      <button className="btn play-btn" onClick={() => navigate("/signin")}>
         PLAY
       </button>
     </div>

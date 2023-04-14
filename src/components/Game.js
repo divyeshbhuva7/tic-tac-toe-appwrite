@@ -3,10 +3,14 @@ import { useViewportSize } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { collID, databases, dbID } from "../appwriteConfig";
+import { useLocation } from "react-router-dom";
 
 function Game() {
   const { width, height } = useViewportSize();
   const Boxes = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const location = useLocation();
+  const locationArr = location.pathname.split("/");
+  const gameID = locationArr[locationArr.length - 1];
 
   const [boxCount, setBoxCount] = useState({
     val0: "",
@@ -20,20 +24,95 @@ function Game() {
     val8: "",
   });
 
-  const [gameID, setGameID] = useState("");
-  const [user, setUser] = useState("O");
+  const [currPlayer, setCurrPlayer] = useState("O");
   const [winner, setWinner] = useState("");
 
   useEffect(() => {
-    const gamedata = databases.listDocuments(dbID, collID);
-    gamedata
-      .then((res) => {
-        setGameID(res.documents[0].$id);
-      })
-      .catch((err) => console.log(err));
+    const unsubscribe = client.subscribe(
+      `databases.${dbID}.collections.${collID}.documents`,
+      (response) => {
+        // Callback will be executed on changes for documents A and all files.
+        console.log(response.payload);
+      }
+    );
   }, []);
 
-  function postdata() {
+  // setInterval(() => {
+  //   const latestGameData = databases.getDocument(dbID, collID, gameID);
+  //   latestGameData
+  //     .then((res) => {
+  //       // console.log(res.val0);
+  //       setBoxCount({
+  //         ...boxCount,
+  //         val0: res.val0,
+  //         val1: res.val1,
+  //         val2: res.val2,
+  //         val3: res.val3,
+  //         val4: res.val4,
+  //         val5: res.val5,
+  //         val6: res.val6,
+  //         val7: res.val7,
+  //         val8: res.val8,
+  //       });
+  //     })
+  //     .catch((err) => console.log(err));
+  // }, 50000);
+  console.log(boxCount);
+
+  const boxClick = (idx) => {
+    if (
+      winner === "" &&
+      (boxCount[`val${idx}`] === undefined || boxCount[`val${idx}`] === "")
+    ) {
+      switch (idx) {
+        case 0:
+          setBoxCount({ ...boxCount, val0: currPlayer });
+          victory();
+          break;
+        case 1:
+          setBoxCount({ ...boxCount, val1: currPlayer });
+          victory();
+          break;
+        case 2:
+          setBoxCount({ ...boxCount, val2: currPlayer });
+          victory();
+          break;
+        case 3:
+          setBoxCount({ ...boxCount, val3: currPlayer });
+          victory();
+          break;
+        case 4:
+          setBoxCount({ ...boxCount, val4: currPlayer });
+          victory();
+          break;
+        case 5:
+          setBoxCount({ ...boxCount, val5: currPlayer });
+          victory();
+          break;
+        case 6:
+          setBoxCount({ ...boxCount, val6: currPlayer });
+          victory();
+          break;
+        case 7:
+          setBoxCount({ ...boxCount, val7: currPlayer });
+          victory();
+          break;
+        case 8:
+          setBoxCount({ ...boxCount, val8: currPlayer });
+          victory();
+          break;
+
+        default:
+          break;
+      }
+    } else {
+      return;
+    }
+
+    currPlayer === "O" ? setCurrPlayer("X") : setCurrPlayer("O");
+  };
+
+  useEffect(() => {
     const updateGameData = databases.updateDocument(dbID, collID, gameID, {
       val0: boxCount.val0,
       val1: boxCount.val1,
@@ -45,65 +124,14 @@ function Game() {
       val7: boxCount.val7,
       val8: boxCount.val8,
     });
-
-    console.log("boxCount:", boxCount);
     updateGameData
-      .then((res) => console.log(res))
+      .then(() => {
+        // console.log(gameID);
+      })
       .catch((err) => console.log(err));
-  }
 
-  const boxClick = (idx) => {
-    if (
-      winner === "" &&
-      (boxCount[`val${idx}`] === undefined || boxCount[`val${idx}`] === "")
-    ) {
-      switch (idx) {
-        case 0:
-          setBoxCount({ ...boxCount, val0: user });
-          postdata();
-          break;
-        case 1:
-          setBoxCount({ ...boxCount, val1: user });
-          postdata();
-          break;
-        case 2:
-          setBoxCount({ ...boxCount, val2: user });
-          postdata();
-          break;
-        case 3:
-          setBoxCount({ ...boxCount, val3: user });
-          postdata();
-          break;
-        case 4:
-          setBoxCount({ ...boxCount, val4: user });
-          postdata();
-          break;
-        case 5:
-          setBoxCount({ ...boxCount, val5: user });
-          postdata();
-          break;
-        case 6:
-          setBoxCount({ ...boxCount, val6: user });
-          postdata();
-          break;
-        case 7:
-          setBoxCount({ ...boxCount, val7: user });
-          postdata();
-          break;
-        case 8:
-          setBoxCount({ ...boxCount, val8: user });
-          postdata();
-          break;
-
-        default:
-          break;
-      }
-    } else {
-      return;
-    }
-
-    user === "O" ? setUser("X") : setUser("O");
-  };
+    victory();
+  }, [boxClick]);
 
   // victory cases -------------------------------------------------
   function victory() {
@@ -120,23 +148,29 @@ function Game() {
     for (let i = 0; i < possibleCases.length; i++) {
       const [a, b, c] = possibleCases[i];
 
-      console.log(boxCount[`val${a}`].value);
+      if (
+        boxCount[`val${a}`] !== null &&
+        boxCount[`val${b}`] !== null &&
+        boxCount[`val${c}`] !== null
+      ) {
+        if (
+          boxCount[`val${a}`] &&
+          boxCount[`val${a}`] === boxCount[`val${b}`] &&
+          boxCount[`val${a}`] === boxCount[`val${c}`]
+        ) {
+          setWinner(boxCount[`val${a}`]);
 
-      // if (
-      //   boxCount[a].val &&
-      //   boxCount[a].val === boxCount[b].val &&
-      //   boxCount[a].val === boxCount[c].val
-      // ) {
-      //   setWinner(boxCount[a].val);
-
-      //   return;
-      // }
+          return;
+        }
+      } else {
+        return;
+      }
     }
   }
 
   const handleReset = () => {
     setWinner("");
-    setUser("O");
+    setCurrPlayer("O");
     setBoxCount({
       val0: "",
       val1: "",
@@ -149,13 +183,28 @@ function Game() {
       val8: "",
     });
   };
+  const userSignOut = () => {
+    const deleteGame = databases.deleteDocument(dbID, collID, gameID);
+    deleteGame
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    handleReset();
+  };
 
   return (
     <div className="Game">
       <nav className="navbar">
         <h2>Tic-Tac-Toe</h2>
-        <div className="btn Restart-btn" onClick={handleReset}>
-          <span>Restart</span>
+        <div className="Restart-btn" onClick={handleReset}>
+          <span>RESTART</span>
+        </div>
+        <div className="Restart-btn" onClick={userSignOut}>
+          <span>SIGN OUT</span>
         </div>
       </nav>
 
